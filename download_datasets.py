@@ -1,6 +1,6 @@
 import concurrent.futures
 import os
-import shutil
+import glob
 import subprocess
 from typing import List
 
@@ -12,45 +12,96 @@ BAM_FILE_FORMAT = (
 )
 NUM_THREADS = 20
 
+
 def get_relevant_datasets(metadata_df):
-    metadata_df = metadata_df[~metadata_df["DNase Run type"].isna()]
+    metadata_df = metadata_df[~metadata_df["DNase Output type"].isna()]
     return metadata_df
 
 
 def download_cell_cluster_info(dataset_dir, row) -> None:
-    biosample_name = row['Biosample term name'].replace(" ", "_")
+    biosample_name = row["Biosample term name"].replace(" ", "_")
     cluster = f"{biosample_name}_{row['DNase Experiment accession']}"
     if "Hi-C Experiment accession" in row:
         cluster += f"_{row['Hi-C File accession']}"
     cluster_dir = os.path.join(dataset_dir, cluster)
 
     dhs_encode_ids = [s.strip() for s in row["DNase File accession"].split(",")]
-    dnase_run_types = [s.strip() for s in row["DNase Run type"].split(",")]
-    download_from_encode(cluster_dir, dhs_encode_ids)
-    filter_bam(cluster_dir, dhs_encode_ids, dnase_run_types)
+    dnase_output_types = [s.strip() for s in row["DNase Output type"].split(",")]
+    unfiltered_files = download_from_encode(cluster_dir, dhs_encode_ids)
+    filtered_files = filter_bam(
+        cluster_dir, dhs_encode_ids, dnase_output_types, unfiltered_files
+    )
+    sort_and_index_bam(cluster_dir, dhs_encode_ids, filtered_files)
+    delete_tmp_files(cluster_dir)
 
 
-def filter_bam(cluster_dir: str, dhs_encode_ids: List[str], dnase_run_types: List[str]):
+def delete_tmp_files(cluster_dir: str):
+    # Construct full pattern path
+    full_pattern = os.path.join(cluster_dir, "*tmp*")
+
+    # Find all files in the directory that match the pattern
+    files_deleted = 0
+    for file in glob.glob(full_pattern):
+        os.remove(file)
+        files_deleted += 1
+
+    print(f"Deleted {files_deleted} tmp files in {cluster_dir}")
+
+
+def sort_and_index_bam(
+    cluster_dir: str, dhs_encode_ids: List[str], filtered_files: List[str]
+):
+    for i, encode_id in enumerate(dhs_encode_ids):
+        sorted_bam = os.path.join(cluster_dir, f"{encode_id}_sorted.bam")
+        indexed_bam = f"{sorted_bam}.bai"
+        if os.path.exists(sorted_bam) and os.path.exists(indexed_bam):
+            continue  # Already sorted and indexed
+
+        filtered_file = filtered_files[i]
+        print(f"Sorting and indexing {filtered_file}")
+        subprocess.run(
+            f"samtools sort {filtered_file} -o {sorted_bam} && samtools index {sorted_bam}",
+            shell=True,
+            check=True,
+        )
+
+
+def filter_bam(
+    cluster_dir: str,
+    dhs_encode_ids: List[str],
+    dnase_output_types: List[str],
+    unfiltered_files: List[str],
+):
+    filtered_files = []
     for i, encode_id in enumerate(dhs_encode_ids):
         filtered_file = os.path.join(cluster_dir, f"{encode_id}.bam")
+        filtered_files.append(filtered_file)
         if os.path.exists(filtered_file):
             continue  # Already filtered
-        
-        print(f"Filtering {encode_id}")
-        unfiltered_file = os.path.join(cluster_dir, f"{encode_id}_unfiltered.bam")
-        if dnase_run_types[i] == "single-ended":
+
+        unfiltered_file = unfiltered_files[i]
+        print(f"Filtering {unfiltered_file}")
+        if dnase_output_types[i] == "unfiltered alignments":
             subprocess.run(
-            f"samtools view -b -F 780 -q30 {unfiltered_file} -o {filtered_file}.tmp", shell=True, check=True
-        )
-        elif dnase_run_types[i] == "paired-ended":
+                f"samtools view -b -F 780 -q30 {unfiltered_file} -o {filtered_file}.tmp",
+                shell=True,
+                check=True,
+            )
+        elif dnase_output_types[i] == "alignments":
             subprocess.run(
-            f"samtools view -b -F 1804 -q 30 -f2 {unfiltered_file} -o {filtered_file}.tmp", shell=True, check=True
-        )
+                f"samtools view -b -F 1804 -q 30 -f2 {unfiltered_file} -o {filtered_file}.tmp",
+                shell=True,
+                check=True,
+            )
         else:
-            print(f"dnase run type not supported: {dnase_run_types[i]}. Skipping...")
+            print(
+                f"DNase Output type not supported: {dnase_output_types[i]}. Skipping..."
+            )
             continue
-        
+
         os.rename(f"{filtered_file}.tmp", filtered_file)
+    return filtered_files
+
 
 def download_from_encode(cluster_dir, dhs_encode_ids):
     os.makedirs(cluster_dir, exist_ok=True)
@@ -58,15 +109,15 @@ def download_from_encode(cluster_dir, dhs_encode_ids):
     unfiltered_files = []
     for encode_id in dhs_encode_ids:
         unfiltered_file = os.path.join(cluster_dir, f"{encode_id}_unfiltered.bam")
+        unfiltered_files.append(unfiltered_file)
         if os.path.exists(unfiltered_file):
             continue  # Already downloaded this item
 
-        print(f"Downloading {encode_id}")
+        print(f"Downloading {unfiltered_file}")
         dhs_download_url = BAM_FILE_FORMAT.format(ENCODE_ID=encode_id)
         subprocess.run(
             f"wget -O {unfiltered_file} {dhs_download_url}", shell=True, check=True
         )
-        unfiltered_files.append(unfiltered_file)
 
     return unfiltered_files
 
