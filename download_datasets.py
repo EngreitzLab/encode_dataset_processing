@@ -7,7 +7,7 @@ from typing import List
 import click
 import pandas as pd
 
-BAM_FILE_FORMAT = (
+BAM_DOWNLOAD_FORMAT = (
     "https://www.encodeproject.org/files/{ENCODE_ID}/@@download/{ENCODE_ID}.bam"
 )
 NUM_THREADS = 20
@@ -17,12 +17,16 @@ def get_relevant_datasets(metadata_df):
     metadata_df = metadata_df[~metadata_df["DNase Output type"].isna()]
     return metadata_df
 
-
-def download_cell_cluster_info(dataset_dir, row) -> None:
-    biosample_name = row["Biosample term name"].replace(" ", "_")
+def get_cluster_name(row):
+    biosample_name = row["Biosample term name"].replace(" ", "_").replace(",", "_")
     cluster = f"{biosample_name}_{row['DNase Experiment accession']}"
     if "Hi-C Experiment accession" in row:
         cluster += f"_{row['Hi-C File accession']}"
+    return cluster
+    
+
+def download_cell_cluster_info(dataset_dir, row) -> None:
+    cluster = get_cluster_name(row)
     cluster_dir = os.path.join(dataset_dir, cluster)
 
     dhs_encode_ids = [s.strip() for s in row["DNase File accession"].split(",")]
@@ -40,17 +44,19 @@ def delete_tmp_files(cluster_dir: str):
     full_pattern = os.path.join(cluster_dir, "*tmp*")
 
     # Find all files in the directory that match the pattern
-    files_deleted = 0
     for file in glob.glob(full_pattern):
         os.remove(file)
-        files_deleted += 1
 
-    print(f"Deleted {files_deleted} tmp files in {cluster_dir}")
+    files_deleted = len(glob.glob(full_pattern))
+    if files_deleted:
+        print(f"Deleted {files_deleted} tmp files in {cluster_dir}")
 
 
 def sort_and_index_bam(
     cluster_dir: str, dhs_encode_ids: List[str], filtered_files: List[str]
 ):
+    # Delete tmp files if they exist. That usually signifies an incomplete sort/index run
+    delete_tmp_files(cluster_dir)  
     for i, encode_id in enumerate(dhs_encode_ids):
         sorted_bam = os.path.join(cluster_dir, f"{encode_id}_sorted.bam")
         indexed_bam = f"{sorted_bam}.bai"
@@ -114,7 +120,7 @@ def download_from_encode(cluster_dir, dhs_encode_ids):
             continue  # Already downloaded this item
 
         print(f"Downloading {unfiltered_file}")
-        dhs_download_url = BAM_FILE_FORMAT.format(ENCODE_ID=encode_id)
+        dhs_download_url = BAM_DOWNLOAD_FORMAT.format(ENCODE_ID=encode_id)
         subprocess.run(
             f"wget -O {unfiltered_file} {dhs_download_url}", shell=True, check=True
         )
