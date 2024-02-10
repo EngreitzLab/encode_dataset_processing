@@ -1,6 +1,6 @@
 import concurrent.futures
-import os
 import glob
+import os
 import subprocess
 from typing import List
 
@@ -17,17 +17,20 @@ def get_relevant_datasets(metadata_df):
     metadata_df = metadata_df[~metadata_df["DNase Output type"].isna()]
     return metadata_df
 
+
 def get_cluster_name(row):
-    biosample_name = row["Biosample term name"].replace(" ", "_").replace(",", "_")
+    biosample_name = row["Biosample term name"].replace(" ", "_").replace(",", "_").replace("'","")
     cluster = f"{biosample_name}_{row['DNase Experiment accession']}"
     if "Hi-C Experiment accession" in row:
         cluster += f"_{row['Hi-C File accession']}"
     return cluster
-    
+
 
 def download_cell_cluster_info(dataset_dir, row) -> None:
     cluster = get_cluster_name(row)
     cluster_dir = os.path.join(dataset_dir, cluster)
+    # Delete tmp files if they exist. That usually signifies an incomplete sort/index run
+    delete_tmp_files(cluster_dir)
 
     dhs_encode_ids = [s.strip() for s in row["DNase File accession"].split(",")]
     dnase_output_types = [s.strip() for s in row["DNase Output type"].split(",")]
@@ -44,10 +47,10 @@ def delete_tmp_files(cluster_dir: str):
     full_pattern = os.path.join(cluster_dir, "*tmp*")
 
     # Find all files in the directory that match the pattern
+    files_deleted = len(glob.glob(full_pattern))
     for file in glob.glob(full_pattern):
         os.remove(file)
 
-    files_deleted = len(glob.glob(full_pattern))
     if files_deleted:
         print(f"Deleted {files_deleted} tmp files in {cluster_dir}")
 
@@ -55,8 +58,6 @@ def delete_tmp_files(cluster_dir: str):
 def sort_and_index_bam(
     cluster_dir: str, dhs_encode_ids: List[str], filtered_files: List[str]
 ):
-    # Delete tmp files if they exist. That usually signifies an incomplete sort/index run
-    delete_tmp_files(cluster_dir)  
     for i, encode_id in enumerate(dhs_encode_ids):
         sorted_bam = os.path.join(cluster_dir, f"{encode_id}_sorted.bam")
         indexed_bam = f"{sorted_bam}.bai"
@@ -115,6 +116,7 @@ def download_from_encode(cluster_dir, dhs_encode_ids):
     unfiltered_files = []
     for encode_id in dhs_encode_ids:
         unfiltered_file = os.path.join(cluster_dir, f"{encode_id}_unfiltered.bam")
+        unfiltered_file_tmp = unfiltered_file + ".tmp"
         unfiltered_files.append(unfiltered_file)
         if os.path.exists(unfiltered_file):
             continue  # Already downloaded this item
@@ -122,8 +124,9 @@ def download_from_encode(cluster_dir, dhs_encode_ids):
         print(f"Downloading {unfiltered_file}")
         dhs_download_url = BAM_DOWNLOAD_FORMAT.format(ENCODE_ID=encode_id)
         subprocess.run(
-            f"wget -O {unfiltered_file} {dhs_download_url}", shell=True, check=True
+            f"wget -O {unfiltered_file_tmp} {dhs_download_url}", shell=True, check=True
         )
+        os.rename(unfiltered_file_tmp, unfiltered_file)
 
     return unfiltered_files
 
