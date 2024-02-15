@@ -18,27 +18,17 @@ def get_relevant_datasets(metadata_df):
     return metadata_df
 
 
-def get_cluster_name(row):
-    biosample_name = row["Biosample term name"].replace(" ", "_").replace(",", "_").replace("'","")
-    cluster = f"{biosample_name}_{row['DNase Experiment accession']}"
-    if "Hi-C Experiment accession" in row:
-        cluster += f"_{row['Hi-C File accession']}"
-    return cluster
-
-
 def download_cell_cluster_info(dataset_dir, row) -> None:
-    cluster = get_cluster_name(row)
+    cluster = row["Cluster"]
     cluster_dir = os.path.join(dataset_dir, cluster)
+    os.makedirs(cluster_dir, exist_ok=True)
     # Delete tmp files if they exist. That usually signifies an incomplete sort/index run
     delete_tmp_files(cluster_dir)
 
-    dhs_encode_ids = [s.strip() for s in row["DNase File accession"].split(",")]
-    dnase_output_types = [s.strip() for s in row["DNase Output type"].split(",")]
+    dhs_encode_ids = row["DNase_ENCODE_ID"].split(", ")
+    dnase_output_types = row["DNase_Output_Type"].split(", ")
     unfiltered_files = download_from_encode(cluster_dir, dhs_encode_ids)
-    filtered_files = filter_bam(
-        cluster_dir, dhs_encode_ids, dnase_output_types, unfiltered_files
-    )
-    sort_and_index_bam(cluster_dir, dhs_encode_ids, filtered_files)
+    filter_bam(cluster_dir, dhs_encode_ids, dnase_output_types, unfiltered_files)
     delete_tmp_files(cluster_dir)
 
 
@@ -53,24 +43,6 @@ def delete_tmp_files(cluster_dir: str):
 
     if files_deleted:
         print(f"Deleted {files_deleted} tmp files in {cluster_dir}")
-
-
-def sort_and_index_bam(
-    cluster_dir: str, dhs_encode_ids: List[str], filtered_files: List[str]
-):
-    for i, encode_id in enumerate(dhs_encode_ids):
-        sorted_bam = os.path.join(cluster_dir, f"{encode_id}_sorted.bam")
-        indexed_bam = f"{sorted_bam}.bai"
-        if os.path.exists(sorted_bam) and os.path.exists(indexed_bam):
-            continue  # Already sorted and indexed
-
-        filtered_file = filtered_files[i]
-        print(f"Sorting and indexing {filtered_file}")
-        subprocess.run(
-            f"samtools sort {filtered_file} -o {sorted_bam} && samtools index {sorted_bam}",
-            shell=True,
-            check=True,
-        )
 
 
 def filter_bam(
@@ -111,8 +83,6 @@ def filter_bam(
 
 
 def download_from_encode(cluster_dir, dhs_encode_ids):
-    os.makedirs(cluster_dir, exist_ok=True)
-
     unfiltered_files = []
     for encode_id in dhs_encode_ids:
         unfiltered_file = os.path.join(cluster_dir, f"{encode_id}_unfiltered.bam")
@@ -133,25 +103,17 @@ def download_from_encode(cluster_dir, dhs_encode_ids):
 
 @click.command()
 @click.option("--metadata_file", type=str, required=True)
-@click.option("--base_dataset_dir", type=str, default="datasets/")
-def main(metadata_file, base_dataset_dir):
-    metadata_filename = os.path.basename(metadata_file)
-    metadata_label = metadata_filename.split(".")[0]
-    dataset_dir = os.path.join(base_dataset_dir, metadata_label)
-    os.makedirs(dataset_dir, exist_ok=True)
-
+@click.option("--dataset_dir", type=str, required=True)
+def main(metadata_file, dataset_dir):
     metadata_df = pd.read_csv(metadata_file, sep="\t")
-
-    relevant_datasets = get_relevant_datasets(metadata_df)
-
-    print(f"{len(relevant_datasets)} datasets to download")
+    print(f"There are {len(metadata_df)} datasets")
     print(f"Using parallelization with {NUM_THREADS} threads")
 
     # Download datasets in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
         futures = {
             executor.submit(download_cell_cluster_info, dataset_dir, row)
-            for _, row in relevant_datasets.iterrows()
+            for _, row in metadata_df.iterrows()
         }
 
         for future in concurrent.futures.as_completed(futures):

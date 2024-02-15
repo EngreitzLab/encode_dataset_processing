@@ -1,2 +1,4 @@
 datasets
+results
+.snakemake
 __pycache__

@@ -1,0 +1,4 @@
+base_dataset_dir: "datasets/"
+results_dir: "results/"
+dhs_hic_metadata: "dhs_hic.tsv"
+dhs_only_metadata: "dhs_only.tsv"
