@@ -561,7 +561,7 @@ H9_ENCSR275ICP	ENCFF206ALY, ENCFF291ZMA	alignments, alignments
 H9_ENCSR662RIZ	ENCFF244JVV	alignments
 SK-N-SH_ENCSR000EPZ	ENCFF481OBU, ENCFF772OQK	unfiltered alignments, unfiltered alignments
 SK-N-SH_ENCSR000ELQ	ENCFF264HFT	unfiltered alignments
-NT2/D1_ENCSR000EPS	ENCFF372GQM, ENCFF399OQU	unfiltered alignments, unfiltered alignments
+NT2_D1_ENCSR000EPS	ENCFF372GQM, ENCFF399OQU	unfiltered alignments, unfiltered alignments
 HS-5_ENCSR000EMG	ENCFF615UMS	unfiltered alignments
 HS-27A_ENCSR000EMF	ENCFF299GDE	unfiltered alignments
 GM10248_ENCSR000EJB	ENCFF662QWY	unfiltered alignments
@@ -577,7 +577,7 @@ M059J_ENCSR000EPG	ENCFF299HNT, ENCFF108IPV	unfiltered alignments, unfiltered ali
 Daoy_ENCSR346IHH	ENCFF837SRJ, ENCFF401DQF	unfiltered alignments, unfiltered alignments
 HuH-7.5_ENCSR000EKE	ENCFF932RXN	unfiltered alignments
 RCC_7860_ENCSR037PGI	ENCFF499DRT, ENCFF386XBC	alignments, alignments
-HTR-8/SVneo_ENCSR000EKC	ENCFF740ABP	unfiltered alignments
+HTR-8_SVneo_ENCSR000EKC	ENCFF740ABP	unfiltered alignments
 HFF-Myc_ENCSR000ENR	ENCFF762BVA, ENCFF611LBU	unfiltered alignments, unfiltered alignments
 HPDE6-E6E7_ENCSR000EJX	ENCFF376RHW	unfiltered alignments
 RPMI7951_ENCSR000EPV	ENCFF459ADL, ENCFF374UVG	unfiltered alignments, unfiltered alignments

@@ -9,7 +9,7 @@ def get_relevant_datasets(metadata_df):
 
 def get_cluster_name(row):
     biosample_name = (
-        row["Biosample term name"].replace(" ", "_").replace(",", "_").replace("'", "")
+        row["Biosample term name"].replace(" ", "_").replace(",", "_").replace("'", "").replace("/","_")
     )
     cluster = f"{biosample_name}_{row['DNase Experiment accession']}"
     if "Hi-C Experiment accession" in row:
