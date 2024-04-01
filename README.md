@@ -17,3 +17,15 @@ snakemake --use-conda --profile slurm  # Slurm profile defined for running jobs
 py scripts/generate_abc_biosamples.py --metadata_file dhs_hic.tsv --config_name biosamples_config_dhs_hic.tsv --dataset_dir datasets/dhs_hic
 py scripts/generate_abc_biosamples.py --metadata_file dhs_only.tsv --config_name biosamples_config_dhs_only.tsv --dataset_dir datasets/dhs_only
 ```
+
+
+Upload to Synapse
+Requires Synapse authentication to be setup: https://python-docs.synapse.org/tutorials/authentication/#use-synapseconfig
+```
+py scripts/upload_synapse.py --results /scratch/users/agschwin/encode_re2g/dhs_only/ --syn_proj_id syn55082465 --metadata dhs_only.tsv --output dhs_only_w_synapse.tsv
+py scripts/upload_synapse.py --results /scratch/users/agschwin/encode_re2g/dhs_hic/ --syn_proj_id syn55173025 --metadata dhs_hic.tsv --output dhs_hic_w_synapse.tsv
+
+py scripts/update_metadata.py --orig_metadata dhs_only_raw.tsv --metadata_synapse dhs_only_w_synapse.tsv  --new_metadata dhs_only_raw_synapse.tsv
+py scripts/update_metadata.py --orig_metadata dhs_hic_raw.tsv --metadata_synapse dhs_hic_w_synapse.tsv  --new_metadata dhs_hic_raw_synapse.tsv
+
+```
