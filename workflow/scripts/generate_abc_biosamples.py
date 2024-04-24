@@ -2,6 +2,7 @@ import os
 
 import click
 import pandas as pd
+
 CONFIG_TEMPLATE_FILE = "https://raw.githubusercontent.com/broadinstitute/ABC-Enhancer-Gene-Prediction/dev/config/config_biosamples_template.tsv"
 HIC_DOWNLOAD_FORMAT = (
     "https://www.encodeproject.org/files/{ENCODE_ID}/@@download/{ENCODE_ID}.hic"
@@ -39,9 +40,10 @@ def main(metadata_file, dataset_dir, config_name):
         }
         biosamples.loc[i] = biosample
 
-    biosamples.to_csv(config_name, sep="\t", index=False)
+    biosamples.to_csv(os.path.join(dataset_dir, config_name), sep="\t", index=False)
     print(f"Generated config: {config_name}")
 
 
 if __name__ == "__main__":
+    main()
     main()

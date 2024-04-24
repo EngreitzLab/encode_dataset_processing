@@ -23,7 +23,7 @@ def get_bai_files(df, df_type):
 
 rule all:
 	input:
-		# get_bai_files(DHS_HIC_DF, "dhs_hic"),
+		get_bai_files(DHS_HIC_DF, "dhs_hic"),
 		get_bai_files(DHS_ONLY_DF, "dhs_only")
 	
 
