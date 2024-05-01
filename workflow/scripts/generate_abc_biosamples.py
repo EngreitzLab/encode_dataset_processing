@@ -46,4 +46,3 @@ def main(metadata_file, dataset_dir, config_name):
 
 if __name__ == "__main__":
     main()
-    main()

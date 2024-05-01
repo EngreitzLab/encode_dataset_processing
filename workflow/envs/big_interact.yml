@@ -1,0 +1,7 @@
+name: bigInteract
+dependencies:
+    - r-base
+    - r-data.table
+    - r-tidyverse
+    - ucsc-bedtobigbed
+    - ucsc-bedsort
