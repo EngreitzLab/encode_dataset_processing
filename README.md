@@ -41,7 +41,15 @@ py workflow/scripts/upload_synapse.py --results results/dhs_only/ --syn_proj_id 
 py workflow/scripts/upload_synapse.py --results results/dhs_hic/ --syn_proj_id syn58711235 --metadata metadata/dhs_hic.tsv --pred_type ABC
 
 # Modify original raw metadata tsv file with column of synapse ids
-py workflow/scripts/update_metadata.py --orig_metadata metadata/dhs_only_raw.tsv --metadata_synapse metadata/dhs_only.tsv 
-py workflow/scripts/update_metadata.py --orig_metadata metadata/dhs_hic_raw.tsv --metadata_synapse metadata/dhs_hic.tsv
+py workflow/scripts/update_metadata.py --orig_metadata metadata/dhs_only_raw.tsv --biosample_ontology metadata/biosample_ontology.tsv --biosample_disease metadata/biosample_disease_status.tsv --metadata_synapse metadata/dhs_only.tsv 
+py workflow/scripts/update_metadata.py --orig_metadata metadata/dhs_hic_raw.tsv --biosample_ontology metadata/biosample_ontology.tsv --biosample_disease metadata/biosample_disease_status.tsv --metadata_synapse metadata/dhs_hic.tsv
 ```
 
+
+## ENCODE Portal Submission
+
+# Create annotation file. Include documents field
+py encode_portal_submission/create_annotation.py --metadata metadata/dhs_only_raw.tsv --output dhs_only_annotation.tsv
+
+# Create file object tsv file for each of the 4 file uploads
+# Step run to indicate file provenance 
