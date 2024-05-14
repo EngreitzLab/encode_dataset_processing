@@ -49,7 +49,11 @@ py workflow/scripts/update_metadata.py --orig_metadata metadata/dhs_hic_raw.tsv 
 ## ENCODE Portal Submission
 
 # Create annotation file. Include documents field
-py encode_portal_submission/create_annotation.py --metadata metadata/dhs_only_raw.tsv --output dhs_only_annotation.tsv
+py encode_portal_submission/create_annotation.py --metadata metadata/dhs_only_raw.tsv --output encode_portal_submission/results/dhs_only/annotation.tsv
+py encode_portal_submission/create_annotation.py --metadata metadata/dhs_hic_raw.tsv --output encode_portal_submission/results/dhs_hic/annotation.tsv
 
 # Create file object tsv file for each of the 4 file uploads
+py encode_portal_submission/create_pred_file_metadata.py --metadata metadata/dhs_only.tsv --file_stats encode_portal_submission/results/dhs_only/combined_file_stats.tsv.gz --output_folder encode_portal_submission/results/dhs_only
+py encode_portal_submission/create_pred_file_metadata.py --metadata metadata/dhs_hic.tsv --file_stats encode_portal_submission/results/dhs_hic/combined_file_stats.tsv.gz --output_folder encode_portal_submission/results/dhs_hic
+
 # Step run to indicate file provenance 
