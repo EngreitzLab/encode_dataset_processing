@@ -3,3 +3,4 @@ results
 metadata
 .snakemake
 __pycache__
+EU_Logs/

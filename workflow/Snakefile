@@ -47,15 +47,23 @@ def get_bedpe(df, df_type):
 		files.append(os.path.join(RESULTS_DIR, df_type, row["Cluster"], "Predictions", f"abc_predictions_{row['Cluster']}_thresholded_predictions.bedpe.gz"))
 	return files
 
+def get_candidate_elements(df, df_type):
+	files = []
+	for _, row in df.iterrows():
+		files.append(os.path.join(RESULTS_DIR, df_type, row["Cluster"], "Peaks", f"abc_predictions_{row['Cluster']}_candidate_elements.bed"))
+	return files
+
 rule all:
 	input:
 		# get_bai_files(DHS_HIC_DF, "dhs_hic"),
 		# get_bai_files(DHS_ONLY_DF, "dhs_only"),
 		# get_reformatted_predictions(DHS_HIC_DF, "dhs_hic"),
 		# get_bedpe(DHS_HIC_DF, "dhs_hic"),
+		get_candidate_elements(DHS_HIC_DF, "dhs_hic"),
 		# get_bigInteract(DHS_HIC_DF, "dhs_hic"),
 		# get_reformatted_predictions(DHS_ONLY_DF, "dhs_only"),
 		# get_bedpe(DHS_ONLY_DF, "dhs_only"),
+		get_candidate_elements(DHS_ONLY_DF, "dhs_only"),
 		# get_bigInteract(DHS_ONLY_DF, "dhs_only")
 	
 
@@ -121,4 +129,16 @@ rule create_bedpe:
 	shell:
 		"""
 		ln -rs {input.bedpe} {output.bedpe}
+		"""
+
+rule create_candidate_elements:
+	input: 
+		candidate_elements = lambda wildcard: os.path.join(RESULTS_DIR, wildcard.DF_TYPE, wildcard.CLUSTER, "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"), 
+	output: 
+		candidate_elements = os.path.join(RESULTS_DIR, "{DF_TYPE}", "{CLUSTER}", "Peaks", "abc_predictions_{CLUSTER}_candidate_elements.bed")
+	resources:
+		mem = "2G"
+	shell:
+		"""
+		ln -rs {input.candidate_elements} {output.candidate_elements}
 		"""

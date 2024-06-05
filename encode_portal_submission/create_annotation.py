@@ -7,15 +7,23 @@ LAB = "/labs/jesse-engreitz/"
 AWARD = "UM1HG009436"
 ANNOTATION_TYPE = "element gene link predictions"
 ORGANISM = "human"
-ALIAS_PREFIX = "jesse-engreitz:encode_re2g_predictions_"
-SOFTWARE_USED = "encode:re2g_modelV2.0.0"
+rE2G_ALIAS_PREFIX = "jesse-engreitz:encode_re2g_predictions_"
+ABC_ALIAS_PREFIX = "jesse-engreitz:abc_predictions_"
+SOFTWARE_USED = "encode:rE2g_v2, encode:abc_v1.1.2"
 
-def get_alias(cluster, dhs_hic):
+def get_alias(cluster, dhs_hic, software_type):
+    if software_type == "rE2G":
+        prefix = rE2G_ALIAS_PREFIX
+    elif software_type == "ABC":
+        prefix = ABC_ALIAS_PREFIX
+    else:
+        raise Exception(f"{software_type} not supported")
+
     if dhs_hic:
         suffix = "_DNaseHiC"
     else:
         suffix = "_DNaseOnly"
-    return f"{ALIAS_PREFIX}{cluster}{suffix}"
+    return f"{prefix}{cluster}{suffix}"
 
 def get_assay_term_name(dhs_hic):
     if dhs_hic:
@@ -43,8 +51,9 @@ def main(metadata, output):
     dhs_hic = determine_if_dhs_hic(metadata_df)
     new_rows = []
     for idx, row in metadata_df.iterrows():
+        aliases = ", ".join([get_alias(row['Cluster ID'], dhs_hic, "rE2G"), get_alias(row['Cluster ID'], dhs_hic, "ABC")])
         new_rows.append({
-            "Description": f"ENCODE-rE2G predictions for {row['Biosample term name']}; Donor: {get_donor(row)}",
+            "description": f"ENCODE-rE2G predictions for {row['Biosample term name']}; Donor: {get_donor(row)}",
             "lab": LAB,
             "award": AWARD,
             "annotation_type": ANNOTATION_TYPE,
@@ -52,7 +61,7 @@ def main(metadata, output):
             "organism": ORGANISM,
             "biosample_ontology": row["Biosample ontology"],
             "experimental_input": row["DNase Experiment accession"],
-            "aliases": get_alias(row['Cluster ID'], dhs_hic),
+            "aliases": aliases,
             "software_used": SOFTWARE_USED,
             "disease_term_id": row["Disease Term ID"]
         })

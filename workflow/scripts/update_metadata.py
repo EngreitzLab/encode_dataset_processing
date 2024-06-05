@@ -12,12 +12,12 @@ def get_synapse_columns(columns):
               
     return synapse_cols
 
-@click.command()
+@click.command(name="update_orig")
 @click.option("--orig_metadata")
 @click.option("--biosample_ontology")
 @click.option("--biosample_disease")
 @click.option("--metadata_synapse")
-def main(orig_metadata, biosample_ontology, biosample_disease, metadata_synapse):
+def update_orig(orig_metadata, biosample_ontology, biosample_disease, metadata_synapse):
     orig_metadata_df = pd.read_csv(orig_metadata, sep='\t')
     if "Cluster ID" in orig_metadata_df.columns:
         raise Exception("Already merged the original metadata. If you wish to re-merge, redownload raw metadata")
@@ -42,5 +42,25 @@ def main(orig_metadata, biosample_ontology, biosample_disease, metadata_synapse)
     merged_df[columns].to_csv(orig_metadata, sep='\t', index=False)
 
 
+@click.command(name="add_abc_peaks")
+@click.option("--metadata")
+@click.option("--results")
+def add_abc_peaks(metadata, results):
+    metadata_df = pd.read_csv(metadata, sep="\t")
+    metadata_df["ABC_candidate_elements"] = metadata_df["Cluster"].apply(
+        lambda x: os.path.join(
+            results, x, "Peaks", f"abc_predictions_{x}_candidate_elements.bed"
+        )
+    )
+    metadata_df.to_csv(metadata, sep="\t", index=False)
+
+@click.group()
+def cli():
+    pass
+
+cli.add_command(update_orig)
+cli.add_command(add_abc_peaks)
+
+
 if __name__ == "__main__":
-    main()
+    cli()
