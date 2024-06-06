@@ -9,8 +9,8 @@ LAB = "/labs/jesse-engreitz/"
 AWARD = "UM1HG009436"
 ASSEMBLY = "GRCh38"
 STEP_RUNS = {
-    "ABC": "/analysis-step-runs/5f021126-a585-4ade-87cd-2d23433ad7ac/", 
-    "rE2G": "/analysis-step-runs/75014b9f-2c64-4681-bfa1-82ee99e431f3/"
+    "ABC": "encode:abc_element_gene_link_prediction_analysis_step_v2_run", 
+    "rE2G": "encode:encode-re2g_enhancer_gene_predictions_step_v2_run"
 }
 
 

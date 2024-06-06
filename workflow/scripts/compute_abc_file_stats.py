@@ -8,7 +8,6 @@ import pandas as pd
 
 NUM_THREADS = 20
 
-
 def get_file_stats(file_path):
     """Get the size of the file in bytes. Compute the MD5 checksum of the file"""
     with open(file_path, "rb") as f:

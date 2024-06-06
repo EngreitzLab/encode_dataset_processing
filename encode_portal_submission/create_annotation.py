@@ -5,7 +5,7 @@ import pandas as pd
 
 LAB = "/labs/jesse-engreitz/"
 AWARD = "UM1HG009436"
-ANNOTATION_TYPE = "element gene link predictions"
+ANNOTATION_TYPE = "element gene regulatory interaction predictions"
 ORGANISM = "human"
 rE2G_ALIAS_PREFIX = "jesse-engreitz:encode_re2g_predictions_"
 ABC_ALIAS_PREFIX = "jesse-engreitz:abc_predictions_"
