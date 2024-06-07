@@ -1,5 +1,5 @@
 datasets
-results
+/results
 metadata
 .snakemake
 __pycache__
