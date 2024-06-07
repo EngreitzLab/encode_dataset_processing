@@ -60,16 +60,19 @@ py workflow/scripts/update_metadata.py update_orig --orig_metadata metadata/dhs_
 
 
 ## 5. ENCODE Portal Submission
-DHS-only supported  
+DHS-only supported for now
 
-# Create annotation file
+Create annotation file
+```
 py encode_portal_submission/create_annotation.py --metadata metadata/dhs_only_raw.tsv --output encode_portal_submission/results/dhs_only/annotation.tsv
-<!-- py encode_portal_submission/create_annotation.py --metadata metadata/dhs_hic_raw.tsv --output encode_portal_submission/results/dhs_hic/annotation.tsv -->
+```
 
-# Create file object tsv file for each of the 5 file uploads 
-# Each file upload contains both rE2G and ABC predictions (with exception of Peaks file only containing ABC results)
+Create file object tsv file for each of the 5 file uploads. Each file upload contains both rE2G and ABC predictions (with exception of Peaks file only containing ABC results)
+```
 py encode_portal_submission/create_pred_file_metadata.py --metadata metadata/dhs_only.tsv --file_stats encode_portal_submission/results/all_combined_file_stats.tsv --output_folder encode_portal_submission/results/dhs_only
-<!-- py encode_portal_submission/create_pred_file_metadata.py --metadata metadata/dhs_hic.tsv --file_stats encode_portal_submission/results/combined_file_stats.tsv.gz --output_folder encode_portal_submission/results/dhs_hic -->
+```
 
-
+Submit
+```
 ./submit_to_portal.sh
+```
