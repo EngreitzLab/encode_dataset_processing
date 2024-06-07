@@ -76,3 +76,5 @@ Submit
 ```
 ./submit_to_portal.sh
 ```
+
+Thing I missed was patching the derived_from column for the rE2G files

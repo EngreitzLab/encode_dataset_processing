@@ -42,6 +42,13 @@ def get_file_format_type(prediction_type):
         "candidate_elements": "bed3+",
     }[prediction_type]
 
+def get_derived_from(row, dhs_hic, software):
+    if software == "ABC":
+        return row["DNase_ENCODE_ID"]
+    else:
+        alias = get_alias(row['Cluster'], dhs_hic, "ABC")
+        return f"{alias}_full_predictions"
+
 @click.command()
 @click.option("--metadata")
 @click.option("--file_stats")
@@ -56,6 +63,7 @@ def main(metadata, file_stats, output_folder):
             for software in ["rE2G", "ABC"]:
                 if prediction_type == "candidate_elements" and software == "rE2G":
                     continue
+                derived_from = get_derived_from(row, dhs_hic, software)
                 filename = row[f"{software}_{prediction_type}"]
                 alias = get_alias(row['Cluster'], dhs_hic, software)
                 new_row = {
@@ -70,6 +78,7 @@ def main(metadata, file_stats, output_folder):
                     "aliases": f"{alias}_{prediction_type}",
                     "assembly": ASSEMBLY,
                     "submitted_file_name": filename,
+                    "derived_from": derived_from
                 }
                 if new_row["file_format"] == "bed":
                     new_row["file_format_type"] = get_file_format_type(prediction_type)
